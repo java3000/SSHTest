@@ -1,11 +1,6 @@
 ﻿using Renci.SshNet;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using SSHTest.Object;
 
 namespace SSHTest
 {
@@ -14,9 +9,9 @@ namespace SSHTest
 
         public ConnectionInfo ConnectionInfo { get; set; }
 
-        internal List<string> InquireAuidioCard()
+        internal List<Subdevice> InquireAuidioCard()
         {
-            List<string> result = new List<string>();
+            var result = new List<Subdevice>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -38,9 +33,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<string> InquireCDDVDDrive()
+        internal List<Subdevice> InquireCDDVDDrive()
         {
-            List<string> result = new List<string>();
+            var result = new List<Subdevice>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -62,9 +57,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<string> InquireController()
+        internal List<Subdevice> InquireController()
         {
-            List<string> result = new List<string>();
+            var result = new List<Subdevice>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -86,9 +81,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<string> InquireDevice()
+        internal Device InquireDevice()
         {
-            List<string> result = new List<string>();
+            var result = new Device();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -110,9 +105,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<string> InquireDiskDrive()
+        internal List<Subdevice> InquireDiskDrive()
         {
-            List<string> result = new List<string>();
+            var result = new List<Subdevice>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -134,9 +129,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<string> InquireDisketteDrive()
+        internal List<Subdevice> InquireDisketteDrive()
         {
-            List<string> result = new List<string>();
+            var result = new List<Subdevice>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -158,9 +153,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<string> InquireKeyboard()
+        internal List<Subdevice> InquireKeyboard()
         {
-            List<string> result = new List<string>();
+            var result = new List<Subdevice>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -182,9 +177,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<string> InquireLogicalDrive()
+        internal List<LogicalDrive> InquireLogicalDrive()
         {
-            List<string> result = new List<string>();
+            var result = new List<LogicalDrive>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -206,9 +201,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<string> InquireMemory()
+        internal List<Memory> InquireMemory()
         {
-            List<string> result = new List<string>();
+            var result = new List<Memory>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -278,9 +273,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<string> InquireModem()
+        internal List<Subdevice> InquireModem()
         {
-            List<string> result = new List<string>();
+            var result = new List<Subdevice>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -302,9 +297,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<string> InquireMonitor()
+        internal List<Subdevice> InquireMonitor()
         {
-            List<string> result = new List<string>();
+            var result = new List<Subdevice>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -326,9 +321,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<string> InquireMotherboard()
+        internal List<Subdevice> InquireMotherboard()
         {
-            List<string> result = new List<string>();
+            var result = new List<Subdevice>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -352,9 +347,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<string> InquireNetworkAdapter()
+        internal List<NetworkAdapter> InquireNetworkAdapter()
         {
-            List<string> result = new List<string>();
+            var result = new List<NetworkAdapter>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -376,9 +371,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<string> InquirePointingDevice()
+        internal List<Subdevice> InquirePointingDevice()
         {
-            List<string> result = new List<string>();
+            var result = new List<Subdevice>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -400,9 +395,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<string> InquirePrinter()
+        internal List<Subdevice> InquirePrinter()
         {
-            List<string> result = new List<string>();
+            var result = new List<Subdevice>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -424,9 +419,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<List<string>> InquireProcessor()
+        internal List<Subdevice> InquireProcessor()
         {
-            List<List<string>> result = new List<List<string>>();
+            var result = new List<Subdevice>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -469,9 +464,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<string> InquireSoftware()
+        internal List<Installation> InquireSoftware()
         {
-            List<string> result = new List<string>();
+            var result = new List<Installation>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -493,9 +488,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<string> InquireUnclassifiedSubdevice()
+        internal List<Subdevice> InquireUnclassifiedSubdevice()
         {
-            List<string> result = new List<string>();
+            var result = new List<Subdevice>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -517,9 +512,9 @@ namespace SSHTest
             return result;
         }
 
-        internal List<string> InquireVideoAdapter()
+        internal List<Subdevice> InquireVideoAdapter()
         {
-            List<string> result = new List<string>();
+            var result = new List<Subdevice>();
 
             using (var client = new SshClient(ConnectionInfo))
             {
