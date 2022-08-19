@@ -83,7 +83,7 @@ namespace SSHTest
 
         internal Device InquireDevice()
         {
-            var result = new Device();
+            var result = new Device("this", DateTime.Now, new ProviderType(), "this", new CacheContainer());
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -339,7 +339,7 @@ namespace SSHTest
                         var err = cmd.Error;
                         var stat = cmd.ExitStatus;
 
-                        if (err.Equals("") && stat == 0) result.AddRange(output.Split("\n"));
+                        //if (err.Equals("") && stat == 0) result.AddRange(output.Split("\n"));
                     }
                 }
                 client.Disconnect();
@@ -439,6 +439,7 @@ namespace SSHTest
 
                         if (err.Equals("") && stat == 0)
                         {
+                            var rawData = new List<List<string>> ();
                             List<string> s = new List<string>();
                             s.AddRange(output.Split("\n"));
                             int count = s.Where(s => s.StartsWith("processor")).Count();
@@ -451,7 +452,7 @@ namespace SSHTest
                                 for (int j = index; j < s.Count; j++)
                                 {
                                     ++index;
-                                    if (s[j].Equals("")) { result.Add(list); break; }
+                                    if (s[j].Equals("")) { rawData.Add(list); break; }
                                     list.Add(s[j]);                                 
                                 }
                                 
