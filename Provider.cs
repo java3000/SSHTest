@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Immutable;
+using System.Diagnostics;
 using Renci.SshNet;
 using System.Text.RegularExpressions;
 using SSHTest.Object;
@@ -237,33 +238,17 @@ namespace SSHTest
 
                 ShellStream shellStream = client.CreateShellStream("xterm", 80, 40, 80, 40, 1024 /*, termkvp*/);
 
-                //Get logged in
                 string rep = shellStream.Expect(new Regex(@"[$>]")); //expect user prompt
 
-                //send command
                 shellStream.WriteLine("sudo dmidecode -t 17");
                 rep = shellStream.Expect(new Regex(@"([$#>:])")); //expect password or user prompt
 
-
-                //check to send password
                 if (rep.Contains(":"))
                 {
-                    //send password
                     rep = String.Empty;
                     shellStream.WriteLine("P@ssw0rd");
-                    /*byte[] buffer = new byte[shellStream.Length];
-                    shellStream.Read(buffer, 0, buffer.Length);
-                    rep = Encoding.UTF8.GetString(buffer); */
-                    rep = shellStream.Expect(new Regex(@"[~$]", RegexOptions.Multiline)); //expect user or root prompt
+                    rep = shellStream.Expect(new Regex(@"[~$]", RegexOptions.Multiline));
                 }
-
-                //string[] splitted = rep.Split(Environment.NewLine);
-                //найти первую строку с ""*******, DMI type 17, **** *****""
-                //var list = splitted.ToList();
-                //int start = list.IndexOf("Handle");
-                //начало = +1 - со следующей строки
-                //найти последнюю пустую строку
-                //конец = -2 с пред-предпоследней строки
 
                 string[] splitted = rep.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
                 var list = new List<string>(splitted);
@@ -274,18 +259,22 @@ namespace SSHTest
                 cleanedList.RemoveAll(x => x == "Memory Device");
                 cleanedList.RemoveAll(x => new Regex(@"(.+DMI.+)").IsMatch(x));
 
-                List<Dictionary<string, string>> finalList = new List<Dictionary<string, string>>();
-
+                List<ImmutableDictionary<string, string>> finalList = new List<ImmutableDictionary<string, string>>();
+                Dictionary<string, string> pairs = new Dictionary<string, string>();
+                
                 foreach (var item in cleanedList)
                 {
-                    Dictionary<string, string> pairs = new Dictionary<string, string>();
                     if (!item.Equals(string.Empty))
                     {
                         string[] pair = item.Split(':');
-                        pairs.Add(pair[0], pair[1]);
+                        pairs.Add(pair[0].Trim(new []{'\t', ' '}), pair[1].Trim(new []{'\t', ' '}));
                     }
+                    else  {finalList.Add(pairs.ToImmutableDictionary()); pairs.Clear();}
                 }
 
+                finalList.RemoveAll(x => x["Size"].Equals("No Module Installed"));
+
+                //TODO ADD IM MEMORY CODE HERE
 
                 client.Disconnect();
             }
@@ -471,7 +460,7 @@ namespace SSHTest
 
                         if (err.Equals("") && stat == 0)
                         {
-                            var processors = ParseDmi(output, "processors");
+                            var processors = ParseCpuinfo(output, "processors");
 
                             foreach (var processor in processors)
                             {
@@ -527,7 +516,7 @@ namespace SSHTest
             return result;
         }
 
-        private static List<Dictionary<string, string>> ParseDmi(string output, string type)
+        private static List<Dictionary<string, string>> ParseCpuinfo(string output, string type)
         {
             string categorySeparator = type switch
             {
