@@ -73,5 +73,6 @@ namespace SSHTest.Object
 
     internal class InquiryObjectType
     {
+        public static object Processor { get; set; }
     }
 }

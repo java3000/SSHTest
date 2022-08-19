@@ -2,7 +2,7 @@
 namespace SSHTest.Object
 {
     //Не забываем про отклонения, в которых сериализованы эти данные, см. Deviation
-    internal class Device : InquiryObjectBase
+    public class Device : InquiryObjectBase
     {
         #region fields
         private bool _isEmptyDevice;
@@ -504,7 +504,7 @@ namespace SSHTest.Object
         #endregion
     }
 
-    internal class AgentFileInfo
+    public class AgentFileInfo
     {
     }
 

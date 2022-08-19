@@ -19,7 +19,8 @@
         #endregion
 
         #region constructor
-        private SubdeviceModel(InquiryObjectType inquiryObjectType, string name, string externalID, string typeName, Manufacturer manufacturer, CacheContainer processCache)
+
+        public SubdeviceModel(InquiryObjectType inquiryObjectType, string name, string externalID, string typeName, Manufacturer manufacturer, CacheContainer processCache)
         {
             if (name == null && externalID == null)
                 throw new ArgumentNullException("name/externalID");
@@ -81,5 +82,11 @@
             get { return _isNewModel; }
         }
         #endregion
+
+        public static SubdeviceModel Get(object processor, string s, Manufacturer manufacturer, ProcessCache processCache, out bool @new)
+        {
+            @new = true;
+            return new SubdeviceModel(new InquiryObjectType(), "", "", "", new Manufacturer("this", new CacheContainer()), new CacheContainer());
+        }
     }
 }

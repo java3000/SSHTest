@@ -12,7 +12,8 @@
         #endregion
 
         #region constructor
-        private Manufacturer(string name, CacheContainer processCache)
+
+        public Manufacturer(string name, CacheContainer processCache)
         {
             if (name == null)
                 throw new ArgumentNullException("name");
@@ -32,6 +33,10 @@
         }
         #endregion
 
+        public static Manufacturer Get(string s, ProcessCache processCache)
+        {
+            return new Manufacturer("this", new CacheContainer());
+        }
     }
 
     internal class Catalogue

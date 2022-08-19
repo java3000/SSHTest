@@ -11,7 +11,7 @@ namespace SSHTest.Object
         Error = 5,
     }
 
-    internal abstract class InquiryObjectBase
+    public abstract class InquiryObjectBase
     {
         #region fiedlds
         private StringBuilder _sb;
