@@ -274,7 +274,65 @@ namespace SSHTest
 
                 finalList.RemoveAll(x => x["Size"].Equals("No Module Installed"));
 
-                //TODO ADD IM MEMORY CODE HERE
+                //TODO IM MEMORY CODE HERE
+                bool @new;
+                        string manufacturerName = Convert.ToString(obj["Manufacturer"]).Trim();
+                        Manufacturer manufacturer = Manufacturer.Get(manufacturerName, device.ProcessCache);
+                        //
+                        string modelName = Convert.ToString(obj["Model"]).Trim();
+                        SubdeviceModel model = SubdeviceModel.Get(InquiryObjectType.Memory, modelName, manufacturer, device.ProcessCache, out @new);
+                        if (model != null)
+                        {
+                            if (@new)
+                            {
+                                ((ByteParameter)model.ParameterList[Parameter.MEMORY_FORMFACTOR]).Value = Convert.ToByte(obj["FormFactor"]);
+                                ((ByteParameter)model.ParameterList[Parameter.MEMORY_MEMORYTYPE]).Value = Convert.ToByte(obj["MemoryType"]);
+                            }
+                            //
+                            Memory memory = new Memory(model, device);
+                            memory.SerialNumber = Convert.ToString(obj["SerialNumber"]).Trim();
+                            memory.Speed = Convert.ToInt32(obj["Speed"]);
+                            //
+                            long capacity;
+                            if (long.TryParse(Convert.ToString(obj["Capacity"]), out capacity))
+                                memory.Capacity = (int)(capacity / (long)(1024 * 1024)); //в Мб
+                            //
+                            if (motherboard != null)
+                            {//если есть - иначе нет смысла
+                                string deviceLocator = obj["BankLabel"].ToString();//BANK 0 BANK 1,...                    
+                                int number = 0;//номер слота                        
+                                bool memoryInserted = false;
+                                //
+                                int firstDigitNumber = deviceLocator.IndexOfAny(new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' });
+                                if (firstDigitNumber != -1)
+                                {
+                                    deviceLocator = deviceLocator.Substring(firstDigitNumber);//число
+                                    if (int.TryParse(deviceLocator, out number))
+                                    {//нашли то, что искали - number - номер слота в котором стоит память capacity
+                                        if (motherboard.SlotList.Count > number)//есть в матери такой слот
+                                        {
+                                            if (motherboard.SlotList[number].Plugin == null)//еще не вставляли
+                                            {
+                                                motherboard.SlotList[number].Plugin = memory;
+                                                memoryInserted = true;
+                                            }
+                                        }
+                                    }
+                                }
+                                //
+                                if (!memoryInserted)
+                                    for (int i = 0; i < motherboard.SlotList.Count; i++)
+                                        if (motherboard.SlotList[i].Plugin == null)
+                                        {
+                                            motherboard.SlotList[i].Plugin = memory;
+                                            break;
+                                        }
+                            }
+                            //
+                            retval.Add(memory);
+                            device.SubdeviceList.Add(memory);
+                        }
+                //TODO IM MEMORY CODE HERE
 
                 client.Disconnect();
             }
