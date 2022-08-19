@@ -12,5 +12,5 @@ provider.ConnectionInfo = connectionInfo;
 
 //provider.InquireProcessor();
 //provider.InquireMotherboard();
-provider.InquireMemory();
+provider.InquireMemory(provider.currentDevice;
 

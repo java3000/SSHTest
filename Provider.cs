@@ -15,7 +15,7 @@ namespace SSHTest
         public ConnectionInfo ConnectionInfo { get; set; }
         public Device currentDevice { get; set; }
 
-        internal List<Subdevice> InquireAuidioCard()
+        internal List<Subdevice> InquireAuidioCard(Device device)
         {
             var result = new List<Subdevice>();
 
@@ -41,7 +41,7 @@ namespace SSHTest
             return result;
         }
 
-        internal List<Subdevice> InquireCDDVDDrive()
+        internal List<Subdevice> InquireCDDVDDrive(Device device)
         {
             var result = new List<Subdevice>();
 
@@ -67,7 +67,7 @@ namespace SSHTest
             return result;
         }
 
-        internal List<Subdevice> InquireController()
+        internal List<Subdevice> InquireController(Device device)
         {
             var result = new List<Subdevice>();
 
@@ -93,7 +93,7 @@ namespace SSHTest
             return result;
         }
 
-        internal Device InquireDevice()
+        internal Device InquireDevice(CacheContainer processCache)
         {
             var result = new Device("this", DateTime.Now, new ProviderType(), "this", new CacheContainer());
 
@@ -119,7 +119,7 @@ namespace SSHTest
             return result;
         }
 
-        internal List<Subdevice> InquireDiskDrive()
+        internal List<Subdevice> InquireDiskDrive(Device device)
         {
             var result = new List<Subdevice>();
 
@@ -145,7 +145,7 @@ namespace SSHTest
             return result;
         }
 
-        internal List<Subdevice> InquireDisketteDrive()
+        internal List<Subdevice> InquireDisketteDrive(Device device)
         {
             var result = new List<Subdevice>();
 
@@ -171,7 +171,7 @@ namespace SSHTest
             return result;
         }
 
-        internal List<Subdevice> InquireKeyboard()
+        internal List<Subdevice> InquireKeyboard(Device device)
         {
             var result = new List<Subdevice>();
 
@@ -197,7 +197,7 @@ namespace SSHTest
             return result;
         }
 
-        internal List<LogicalDrive> InquireLogicalDrive()
+        internal List<LogicalDrive> InquireLogicalDrive(Device device)
         {
             var result = new List<LogicalDrive>();
 
@@ -224,7 +224,7 @@ namespace SSHTest
             return result;
         }
 
-        internal List<Memory> InquireMemory()
+        internal List<Memory> InquireMemory(Device device)
         {
             var result = new List<Memory>();
 
@@ -277,10 +277,10 @@ namespace SSHTest
                 //TODO IM MEMORY CODE HERE
                 bool @new;
                         string manufacturerName = Convert.ToString(obj["Manufacturer"]).Trim();
-                        Manufacturer manufacturer = Manufacturer.Get(manufacturerName, device.ProcessCache);
+                        Manufacturer manufacturer = Manufacturer.Get(manufacturerName, new ProcessCache());
                         //
                         string modelName = Convert.ToString(obj["Model"]).Trim();
-                        SubdeviceModel model = SubdeviceModel.Get(InquiryObjectType.Memory, modelName, manufacturer, device.ProcessCache, out @new);
+                        SubdeviceModel model = SubdeviceModel.Get(InquiryObjectType.Memory, modelName, manufacturer, new ProcessCache(), out @new);
                         if (model != null)
                         {
                             if (@new)
@@ -329,8 +329,8 @@ namespace SSHTest
                                         }
                             }
                             //
-                            retval.Add(memory);
-                            device.SubdeviceList.Add(memory);
+                            result.Add(memory);
+                            currentDevice.SubdeviceList.Add(memory);
                         }
                 //TODO IM MEMORY CODE HERE
 
@@ -340,7 +340,7 @@ namespace SSHTest
             return result;
         }
 
-        internal List<Subdevice> InquireModem()
+        internal List<Subdevice> InquireModem(Device device)
         {
             var result = new List<Subdevice>();
 
@@ -366,7 +366,7 @@ namespace SSHTest
             return result;
         }
 
-        internal List<Subdevice> InquireMonitor()
+        internal List<Subdevice> InquireMonitor(Device device)
         {
             var result = new List<Subdevice>();
 
@@ -392,7 +392,7 @@ namespace SSHTest
             return result;
         }
 
-        internal List<Subdevice> InquireMotherboard()
+        internal List<Subdevice> InquireMotherboard(Device device)
         {
             var result = new List<Subdevice>();
 
@@ -420,7 +420,7 @@ namespace SSHTest
             return result;
         }
 
-        internal List<NetworkAdapter> InquireNetworkAdapter()
+        internal List<NetworkAdapter> InquireNetworkAdapter(Device device)
         {
             var result = new List<NetworkAdapter>();
 
@@ -446,7 +446,7 @@ namespace SSHTest
             return result;
         }
 
-        internal List<Subdevice> InquirePointingDevice()
+        internal List<Subdevice> InquirePointingDevice(Device device)
         {
             var result = new List<Subdevice>();
 
@@ -472,7 +472,7 @@ namespace SSHTest
             return result;
         }
 
-        internal List<Subdevice> InquirePrinter()
+        internal List<Subdevice> InquirePrinter(Device device)
         {
             var result = new List<Subdevice>();
 
@@ -498,7 +498,7 @@ namespace SSHTest
             return result;
         }
 
-        internal List<Subdevice> InquireProcessor()
+        internal List<Subdevice> InquireProcessor(Device device)
         {
             var result = new List<Subdevice>();
 
@@ -635,7 +635,7 @@ namespace SSHTest
             return result;
         }
 
-        internal List<Subdevice> InquireUnclassifiedSubdevice()
+        internal List<Subdevice> InquireUnclassifiedSubdevice(Device device)
         {
             var result = new List<Subdevice>();
 
@@ -661,7 +661,7 @@ namespace SSHTest
             return result;
         }
 
-        internal List<Subdevice> InquireVideoAdapter()
+        internal List<Subdevice> InquireVideoAdapter(Device device)
         {
             var result = new List<Subdevice>();
 
