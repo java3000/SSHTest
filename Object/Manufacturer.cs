@@ -33,7 +33,7 @@
         }
         #endregion
 
-        public static Manufacturer Get(string s, ProcessCache processCache)
+        public static Manufacturer Get(string s, CacheContainer processCache)
         {
             return new Manufacturer("this", new CacheContainer());
         }

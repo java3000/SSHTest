@@ -10,7 +10,7 @@ var connectionInfo = new ConnectionInfo("192.168.39.128", "administrator", new P
 Provider provider = new Provider();
 provider.ConnectionInfo = connectionInfo;
 
-//provider.InquireProcessor();
-//provider.InquireMotherboard();
-provider.InquireMemory(provider.currentDevice;
+//provider.InquireProcessor(provider.currentDevice);
+provider.InquireMotherboard(provider.currentDevice);
+//provider.InquireMemory(provider.currentDevice);
 

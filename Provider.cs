@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using Renci.SshNet;
 using System.Text.RegularExpressions;
+using Renci.SshNet.Common;
 using SSHTest.Object;
 
 //https://white55.ru/hardware.html
@@ -227,91 +228,69 @@ namespace SSHTest
         internal List<Memory> InquireMemory(Device device)
         {
             var result = new List<Memory>();
+            Motherboard? motherboard = null; //(Motherboard)device.SubdeviceList.Find(x => x is Motherboard);
+            string serialNumber = null;
+            SubdeviceModel model;
+            bool @new;
 
             using (var client = new SshClient(ConnectionInfo))
             {
                 client.Connect();
 
-                IDictionary<Renci.SshNet.Common.TerminalModes, uint> termkvp =
-                    new Dictionary<Renci.SshNet.Common.TerminalModes, uint>();
-                termkvp.Add(Renci.SshNet.Common.TerminalModes.ECHO, 53);
-
-                ShellStream shellStream = client.CreateShellStream("xterm", 80, 40, 80, 40, 1024 /*, termkvp*/);
-
-                string rep = shellStream.Expect(new Regex(@"[$>]")); //expect user prompt
-
-                shellStream.WriteLine("sudo dmidecode -t 17");
-                rep = shellStream.Expect(new Regex(@"([$#>:])")); //expect password or user prompt
-
-                if (rep.Contains(":"))
+                if (client.IsConnected)
                 {
-                    rep = String.Empty;
-                    shellStream.WriteLine("P@ssw0rd");
-                    rep = shellStream.Expect(new Regex(@"[~$]", RegexOptions.Multiline));
-                }
+                    var finalList = RunSudoDmiCommand(client, DmiType.MemoryDevice, "P@ssw0rd");
 
-                string[] splitted = rep.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
-                var list = new List<string>(splitted);
-                var start = list.IndexOf("Memory Device") + 1;
-                var end = (list.Count - 2) - start;
-                var cleanedList = list.GetRange(start, end);
-
-                cleanedList.RemoveAll(x => x == "Memory Device");
-                cleanedList.RemoveAll(x => new Regex(@"(.+DMI.+)").IsMatch(x));
-
-                List<ImmutableDictionary<string, string>> finalList = new List<ImmutableDictionary<string, string>>();
-                Dictionary<string, string> pairs = new Dictionary<string, string>();
-                
-                foreach (var item in cleanedList)
-                {
-                    if (!item.Equals(string.Empty))
+                    finalList.RemoveAll(x => x["Size"].Equals("No Module Installed"));
+                    //
+                    //
+                    foreach (var obj in finalList)
                     {
-                        string[] pair = item.Split(':');
-                        pairs.Add(pair[0].Trim(new []{'\t', ' '}), pair[1].Trim(new []{'\t', ' '}));
-                    }
-                    else  {finalList.Add(pairs.ToImmutableDictionary()); pairs.Clear();}
-                }
-
-                finalList.RemoveAll(x => x["Size"].Equals("No Module Installed"));
-
-                //TODO IM MEMORY CODE HERE
-                bool @new;
                         string manufacturerName = Convert.ToString(obj["Manufacturer"]).Trim();
-                        Manufacturer manufacturer = Manufacturer.Get(manufacturerName, new ProcessCache());
-                        //
+                        Manufacturer manufacturer = Manufacturer.Get(manufacturerName, device.ProcessCache);
+
+                        //TODO get the model name somethere
                         string modelName = Convert.ToString(obj["Model"]).Trim();
-                        SubdeviceModel model = SubdeviceModel.Get(InquiryObjectType.Memory, modelName, manufacturer, new ProcessCache(), out @new);
+                        model = SubdeviceModel.Get(InquiryObjectType.Memory, modelName, manufacturer,
+                            device.ProcessCache,
+                            out @new);
+
                         if (model != null)
                         {
                             if (@new)
                             {
-                                ((ByteParameter)model.ParameterList[Parameter.MEMORY_FORMFACTOR]).Value = Convert.ToByte(obj["FormFactor"]);
-                                ((ByteParameter)model.ParameterList[Parameter.MEMORY_MEMORYTYPE]).Value = Convert.ToByte(obj["MemoryType"]);
+                                ((ByteParameter)model.ParameterList[Parameter.MEMORY_FORMFACTOR]).Value =
+                                    Convert.ToByte(MemoryFormFactorConverter.GetMemoryFormFactor(obj["Form Factor"]));
+                                ((ByteParameter)model.ParameterList[Parameter.MEMORY_MEMORYTYPE]).Value =
+                                    Convert.ToByte(MemoryTypeConverter.GetInterfaceType(obj["Type"]));
                             }
-                            //
+
                             Memory memory = new Memory(model, device);
-                            memory.SerialNumber = Convert.ToString(obj["SerialNumber"]).Trim();
-                            memory.Speed = Convert.ToInt32(obj["Speed"]);
+                            memory.SerialNumber = Convert.ToString(obj["Serial Number"]).Trim();
+                            memory.Speed = Convert.ToInt32((obj["Speed"].Equals("Unknown")) ? 0 : obj["Speed"]);
                             //
                             long capacity;
-                            if (long.TryParse(Convert.ToString(obj["Capacity"]), out capacity))
-                                memory.Capacity = (int)(capacity / (long)(1024 * 1024)); //в Мб
+                            if (long.TryParse(Convert.ToString(obj["Size"]), out capacity))
+                                memory.Capacity = (int)(capacity / (1024 * 1024)); //в Мб
                             //
                             if (motherboard != null)
-                            {//если есть - иначе нет смысла
-                                string deviceLocator = obj["BankLabel"].ToString();//BANK 0 BANK 1,...                    
-                                int number = 0;//номер слота                        
+                            {
+                                string deviceLocator = (obj["Bank Locator"].Equals(String.Empty))
+                                    ? obj["Locator"]
+                                    : obj["Bank Locator"]; //BANK 0 BANK 1,...                    
+                                int number;
                                 bool memoryInserted = false;
                                 //
-                                int firstDigitNumber = deviceLocator.IndexOfAny(new char[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' });
+                                int firstDigitNumber = deviceLocator.IndexOfAny(
+                                    new[] { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' });
                                 if (firstDigitNumber != -1)
                                 {
-                                    deviceLocator = deviceLocator.Substring(firstDigitNumber);//число
+                                    deviceLocator = deviceLocator.Substring(firstDigitNumber); //число
                                     if (int.TryParse(deviceLocator, out number))
-                                    {//нашли то, что искали - number - номер слота в котором стоит память capacity
-                                        if (motherboard.SlotList.Count > number)//есть в матери такой слот
+                                    {
+                                        if (motherboard.SlotList.Count > number) //есть в матери такой слот
                                         {
-                                            if (motherboard.SlotList[number].Plugin == null)//еще не вставляли
+                                            if (motherboard.SlotList[number].Plugin == null) //еще не вставляли
                                             {
                                                 motherboard.SlotList[number].Plugin = memory;
                                                 memoryInserted = true;
@@ -319,6 +298,7 @@ namespace SSHTest
                                         }
                                     }
                                 }
+
                                 //
                                 if (!memoryInserted)
                                     for (int i = 0; i < motherboard.SlotList.Count; i++)
@@ -328,16 +308,71 @@ namespace SSHTest
                                             break;
                                         }
                             }
-                            //
+
                             result.Add(memory);
                             currentDevice.SubdeviceList.Add(memory);
                         }
-                //TODO IM MEMORY CODE HERE
+                    }
+                }
 
                 client.Disconnect();
             }
 
             return result;
+        }
+
+        private static List<ImmutableDictionary<string, string>> RunSudoDmiCommand(SshClient client, DmiType type,
+            string password)
+        {
+            IDictionary<TerminalModes, uint> termkvp = new Dictionary<TerminalModes, uint>();
+            termkvp.Add(TerminalModes.ECHO, 53);
+
+            ShellStream shellStream = client.CreateShellStream("xterm", 80, 40, 80, 40, 1024 /*, termkvp*/);
+
+            string rep = shellStream.Expect(new Regex(@"[$>]"));
+
+            shellStream.WriteLine("sudo dmidecode -t " + (int)type);
+            rep = shellStream.Expect(new Regex(@"([$#>:])"));
+
+            if (rep.Contains(":"))
+            {
+                shellStream.WriteLine(password);
+                rep = shellStream.Expect(new Regex(@"[~$]", RegexOptions.Multiline));
+            }
+
+            string[] splitted = rep.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            var list = new List<string>(splitted);
+            var start = list.IndexOf(DmiConverter.GetName(type)) + 1;
+            var end = (list.Count - 2) - start;
+            var cleanedList = list.GetRange(start, end);
+
+            cleanedList.RemoveAll(x => x == DmiConverter.GetName(type));
+            cleanedList.RemoveAll(x => new Regex(@"(.+DMI.+)").IsMatch(x));
+
+            List<ImmutableDictionary<string, string>> finalList = new List<ImmutableDictionary<string, string>>();
+            Dictionary<string, string> pairs = new Dictionary<string, string>();
+
+            foreach (var item in cleanedList)
+            {
+                if (!item.Equals(string.Empty))
+                {
+                    string[] pair = item.Split(':');
+                    pairs.Add(pair[0].Trim('\t', ' '), pair[1].Trim('\t', ' '));
+                }
+                else
+                {
+                    finalList.Add(pairs.ToImmutableDictionary());
+                    pairs.Clear();
+                }
+            }
+
+            if (finalList.Count <= 0)
+            {
+                finalList.Add(pairs.ToImmutableDictionary());
+                pairs.Clear();
+            }
+
+            return finalList;
         }
 
         internal List<Subdevice> InquireModem(Device device)
@@ -395,6 +430,10 @@ namespace SSHTest
         internal List<Subdevice> InquireMotherboard(Device device)
         {
             var result = new List<Subdevice>();
+            Motherboard motherboard = null;
+            string serialNumber = null;
+            SubdeviceModel model;
+            bool @new;
 
             using (var client = new SshClient(ConnectionInfo))
             {
@@ -402,20 +441,48 @@ namespace SSHTest
 
                 if (client.IsConnected)
                 {
-                    string comm = "sudo dmidecode -t baseboard";
-                    using (var cmd = client.CreateCommand(comm))
-                    {
-                        var returned = cmd.Execute();
-                        var output = cmd.Result;
-                        var err = cmd.Error;
-                        var stat = cmd.ExitStatus;
+                    var motherboardList = RunSudoDmiCommand(client, DmiType.Motherboard, "P@ssw0rd");
 
-                        //if (err.Equals("") && stat == 0) result.AddRange(output.Split("\n"));
-                    }
+                    var board = motherboardList[0];
+                    Manufacturer manufacturer = Manufacturer.Get(board["Manufacturer"], device.ProcessCache);
+                    model = SubdeviceModel.Get(InquiryObjectType.Motherboard, board["Product Name"], manufacturer,
+                        device.ProcessCache, out @new);
+
+                    /*if (@new)
+                    {
+                        //TODO need to find this params somewhere
+
+                        ((StringParameter)model.ParameterList[Parameter.MOTHERBOARD_PRIMARYBUSTYPE]).Value = "";
+                        ((StringParameter)model.ParameterList[Parameter.MOTHERBOARD_SECONDARYBUSTYPE]).Value = "";
+                        ((StringParameter)model.ParameterList[Parameter.MOTHERBOARD_CHIPSET]).Value = "";
+                        ((StringParameter)model.ParameterList[Parameter.MOTHERBOARD_SOCKETTYPE]).Value = "";
+                        ((StringParameter)model.ParameterList[Parameter.MOTHERBOARD_SOCKETTYPENAME]).Value = "";
+                    }*/
+                    
+                    motherboard = new Motherboard(model, device);
+
+                    motherboard.Description = board["Asset Tag"];
+                    motherboard.Name = board["Product Name"];
+                    motherboard.Status = (@new) ? StatusType.Created : StatusType.Updated;
+                    motherboard.ManufacturerName = board["Manufacturer"];
+                    motherboard.ModelName = board["Product Name"];
+                    motherboard.SerialNumber = board[" Serial Number"];
+
+                    var biosList = RunSudoDmiCommand(client, DmiType.Bios, "P@ssw0rd");
+                    var bios = biosList[0];
+
+                    motherboard.BIOSDate = DateTime.Parse(bios["Release Date"]);
+                    motherboard.BIOSString = bios["Vendor"];
+                    motherboard.BIOSVersion = bios["Version"];
+
+                    //PART3 - MEMORY SLOTS
                 }
 
                 client.Disconnect();
             }
+
+            device.SubdeviceList.Add(motherboard);
+            result.Add(motherboard);
 
             return result;
         }
@@ -523,9 +590,11 @@ namespace SSHTest
                             foreach (var processor in processors)
                             {
                                 bool @new;
-                                Manufacturer manufacturer = Manufacturer.Get(processor["vendor_id"], new ProcessCache());
-                                SubdeviceModel model = SubdeviceModel.Get(InquiryObjectType.Processor, processor["model name"], manufacturer, new ProcessCache(), out @new);
-                                
+                                Manufacturer manufacturer =
+                                    Manufacturer.Get(processor["vendor_id"], device.ProcessCache);
+                                SubdeviceModel model = SubdeviceModel.Get(InquiryObjectType.Processor,
+                                    processor["model name"], manufacturer, device.ProcessCache, out @new);
+
                                 if (model != null)
                                 {
                                     if (@new)
@@ -535,18 +604,21 @@ namespace SSHTest
                                             family = 0;
                                         if (family == 0)
                                         {
-                                            ((Int32Parameter)model.ParameterList[Parameter.PROCESSOR_FAMILY]).Value = (int)ProcessorFamily.Unknown;
+                                            ((Int32Parameter)model.ParameterList[Parameter.PROCESSOR_FAMILY]).Value =
+                                                (int)ProcessorFamily.Unknown;
                                         }
                                         else
                                         {
-                                            ((Int32Parameter)model.ParameterList[Parameter.PROCESSOR_FAMILY]).Value = family;
+                                            ((Int32Parameter)model.ParameterList[Parameter.PROCESSOR_FAMILY]).Value =
+                                                family;
                                         }
                                         //((StringParameter)model.ParameterList[Parameter.PROCESSOR_SOCKETTYPENAME]).Value = Convert.ToString(obj["SocketDesignation"]).Trim();
                                         //((Int32Parameter)model.ParameterList[Parameter.PROCESSOR_L1CACHESIZE]).Value = l1CacheSize;
 
                                         int addressWidth;
                                         string size = processor["address sizes"];
-                                        size = size.Substring(size.LastIndexOf("bits", StringComparison.Ordinal) - 3, 2) .Trim();
+                                        size = size.Substring(size.LastIndexOf("bits", StringComparison.Ordinal) - 3, 2)
+                                            .Trim();
                                         if (Int32.TryParse(Convert.ToString(size), out addressWidth))
                                             ((Int32Parameter)model.ParameterList[Parameter.PROCESSOR_ADDRESSWIDTH])
                                                 .Value = (addressWidth >= 48) ? 64 : 32;
@@ -569,8 +641,10 @@ namespace SSHTest
                         }
                     }
                 }
+
                 client.Disconnect();
             }
+
             return result;
         }
 
@@ -680,15 +754,9 @@ namespace SSHTest
                         var stat = cmd.ExitStatus;
                     }
                 }
-
-                client.Disconnect();
             }
 
-            return result;
+            return null;
         }
-    }
-
-    internal class ProcessCache
-    {
     }
 }

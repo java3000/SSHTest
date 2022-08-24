@@ -83,7 +83,7 @@
         }
         #endregion
 
-        public static SubdeviceModel Get(object processor, string s, Manufacturer manufacturer, ProcessCache processCache, out bool @new)
+        public static SubdeviceModel Get(object processor, string s, Manufacturer manufacturer, CacheContainer processCache, out bool @new)
         {
             @new = true;
             return new SubdeviceModel(new InquiryObjectType(), "", "", "", new Manufacturer("this", new CacheContainer()), new CacheContainer());
