@@ -8,19 +8,27 @@
           "SshNet.Security.Cryptography": "[1.3.0]"
         },
         "compile": {
-          "lib/netstandard2.0/Renci.SshNet.dll": {}
+          "lib/netstandard2.0/Renci.SshNet.dll": {
+            "related": ".xml"
+          }
         },
         "runtime": {
-          "lib/netstandard2.0/Renci.SshNet.dll": {}
+          "lib/netstandard2.0/Renci.SshNet.dll": {
+            "related": ".xml"
+          }
         }
       },
       "SshNet.Security.Cryptography/1.3.0": {
         "type": "package",
         "compile": {
-          "lib/netstandard2.0/SshNet.Security.Cryptography.dll": {}
+          "lib/netstandard2.0/SshNet.Security.Cryptography.dll": {
+            "related": ".xml"
+          }
         },
         "runtime": {
-          "lib/netstandard2.0/SshNet.Security.Cryptography.dll": {}
+          "lib/netstandard2.0/SshNet.Security.Cryptography.dll": {
+            "related": ".xml"
+          }
         }
       }
     }
@@ -97,26 +105,24 @@
     ]
   },
   "packageFolders": {
-    "C:\\Users\\ayakovlev\\.nuget\\packages\\": {}
+    "/home/odmin/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "E:\\projects\\SSHTest\\SSHTest.csproj",
+      "projectUniqueName": "/home/odmin/RiderProjects/SSHTest/SSHTest.csproj",
       "projectName": "SSHTest",
-      "projectPath": "E:\\projects\\SSHTest\\SSHTest.csproj",
-      "packagesPath": "C:\\Users\\ayakovlev\\.nuget\\packages\\",
-      "outputPath": "E:\\projects\\SSHTest\\obj\\",
+      "projectPath": "/home/odmin/RiderProjects/SSHTest/SSHTest.csproj",
+      "packagesPath": "/home/odmin/.nuget/packages/",
+      "outputPath": "/home/odmin/RiderProjects/SSHTest/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\ayakovlev\\AppData\\Roaming\\NuGet\\NuGet.Config",
-        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        "/home/odmin/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net6.0"
       ],
       "sources": {
-        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -146,16 +152,31 @@
           "net47",
           "net471",
           "net472",
-          "net48"
+          "net48",
+          "net481"
         ],
         "assetTargetFallback": true,
         "warn": true,
+        "downloadDependencies": [
+          {
+            "name": "Microsoft.AspNetCore.App.Ref",
+            "version": "[6.0.8, 6.0.8]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Host.linux-x64",
+            "version": "[6.0.8, 6.0.8]"
+          },
+          {
+            "name": "Microsoft.NETCore.App.Ref",
+            "version": "[6.0.8, 6.0.8]"
+          }
+        ],
         "frameworkReferences": {
           "Microsoft.NETCore.App": {
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\6.0.102\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/6.0.400/RuntimeIdentifierGraph.json"
       }
     }
   }
