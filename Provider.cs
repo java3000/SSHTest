@@ -13,6 +13,7 @@ namespace SSHTest
 {
     public class Provider
     {
+        private const string PASSWORD = "P@ssw0rd";
         public ConnectionInfo ConnectionInfo { get; set; }
         public Device currentDevice { get; set; }
 
@@ -26,7 +27,7 @@ namespace SSHTest
 
                 if (client.IsConnected)
                 {
-                    string comm = "pwd";
+                    string comm = "pwd"; //aplay (alsa-utils) //$lspci -v | grep -A10 -i "audio"
                     using (var cmd = client.CreateCommand(comm))
                     {
                         var returned = cmd.Execute();
@@ -239,7 +240,7 @@ namespace SSHTest
 
                 if (client.IsConnected)
                 {
-                    var finalList = RunSudoDmiCommand(client, DmiType.MemoryDevice, "P@ssw0rd");
+                    var finalList = RunSudoDmiCommand(client, DmiType.MemoryDevice, PASSWORD);
 
                     finalList.RemoveAll(x => x["Size"].Equals("No Module Installed"));
                     //
@@ -250,7 +251,7 @@ namespace SSHTest
                         Manufacturer manufacturer = Manufacturer.Get(manufacturerName, device.ProcessCache);
 
                         //TODO get the model name somethere
-                        string modelName = Convert.ToString(obj["Model"]).Trim();
+                        string modelName = Convert.ToString(obj["Manufacturer"]).Trim();
                         model = SubdeviceModel.Get(InquiryObjectType.Memory, modelName, manufacturer,
                             device.ProcessCache,
                             out @new);
@@ -441,7 +442,7 @@ namespace SSHTest
 
                 if (client.IsConnected)
                 {
-                    var motherboardList = RunSudoDmiCommand(client, DmiType.Motherboard, "P@ssw0rd");
+                    var motherboardList = RunSudoDmiCommand(client, DmiType.Motherboard, PASSWORD);
 
                     var board = motherboardList[0];
                     Manufacturer manufacturer = Manufacturer.Get(board["Manufacturer"], device.ProcessCache);
@@ -458,7 +459,7 @@ namespace SSHTest
                         ((StringParameter)model.ParameterList[Parameter.MOTHERBOARD_SOCKETTYPE]).Value = "";
                         ((StringParameter)model.ParameterList[Parameter.MOTHERBOARD_SOCKETTYPENAME]).Value = "";
                     }*/
-                    
+
                     motherboard = new Motherboard(model, device);
 
                     motherboard.Description = board["Asset Tag"];
@@ -468,7 +469,7 @@ namespace SSHTest
                     motherboard.ModelName = board["Product Name"];
                     motherboard.SerialNumber = board[" Serial Number"];
 
-                    var biosList = RunSudoDmiCommand(client, DmiType.Bios, "P@ssw0rd");
+                    var biosList = RunSudoDmiCommand(client, DmiType.Bios, PASSWORD);
                     var bios = biosList[0];
 
                     motherboard.BIOSDate = DateTime.Parse(bios["Release Date"]);
@@ -755,8 +756,9 @@ namespace SSHTest
                     }
                 }
             }
-
             return null;
         }
     }
 }
+
+          
